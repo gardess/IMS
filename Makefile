@@ -11,11 +11,15 @@ all: build
 build: $(PROJ).cpp
 	$(CXX) $(CXXFLAGS) $(PROJ).cpp -o $(PROJ) $(LDFLAGS)
 
-clean:
-	rm -f $(PROJ) xgarda04.tar 
+run:
+	clear
+	./$(PROJ)
 
-tar: *.cpp *.h Makefile
-	tar -cvf xgarda04.tar *.cpp *.h Makefile report.pdf
+clean:
+	rm -f $(PROJ) 07_xgarda04_xgergu01.zip 
+
+zip: *.cpp *.h Makefile
+	zip 07_xgarda04_xgergu01.zip *.cpp *.h Makefile dokumentace.pdf
 
 commit:
 	git commit -a
