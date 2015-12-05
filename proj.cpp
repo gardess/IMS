@@ -1,11 +1,17 @@
 #include <iostream>
 #include <simlib.h>
 
-
+#define MINUTA 60
+#define PROVOZNIDOBA 12600
 
 Facility fac1("Pult s pitim");
 Facility fac2("Pult polevky+hlavni jidlo 1");
 Facility fac3("Pult s hlavnim jidlem 2");
+Facility pokladna("Pokladna 1");
+
+Store pocetMist("Pocet zidli", 120);
+
+Stat dobaObsluhyPult2("Doba obsluhy u pultu 2");
 
 int J2Pi = 0;
 int J2 = 0;
@@ -17,13 +23,15 @@ int PJ1 = 0;
 int PJ1Pi = 0;
 int PJ2 = 0;
 int PJ2Pi = 0;
+int celkemStudentu = 0;
 
 class Student : public Process
 {
 	void Behavior()
 	{
 		//double prichod = Time;
-
+		double obsluha;
+		celkemStudentu++;
 		 if (Random() <= 0.0025)
 		 {
 		 	//student bere pouze piti
@@ -31,22 +39,43 @@ class Student : public Process
 		 	Wait(Exponential(5));
 		 	Release(fac1);
 		 	Pi++;
-		 	// Pokladna
 
+		 	// Pokladna
+		 	Seize(pokladna);
+		 	if (Random() <= 0.75)
+		 	{
+		 		Wait(Exponential(7));
+		 	}
+		 	else
+		 	{
+		 		Wait(Exponential(25));
+		 	}
+		 	Release(pokladna);
+
+		 	// usazeni a jezeni obědu
+		 	Enter(pocetMist, 1);
+		 	Wait(Uniform(9 * MINUTA, 20 * MINUTA));
+		 	Leave(pocetMist, 1);
 		 }
 
-		else if (Random() > 0.1025)
+		else if (Random() > 0.2025)
 		 {
 		 	// student bere hlavni jidlo od pult c.2
 		 	Seize(fac3);
 
-		 	if (Random() <= 0.25) // na pultu neni pripravene jidlo ktere chce
+		 	if (Random() <= 0.90) // na pultu neni pripravene jidlo ktere chce
 		 	{
-		 		Wait(Exponential(15));
+		 		obsluha = Exponential(15);
+		 		Wait(obsluha);
+		 		dobaObsluhyPult2(obsluha);
+		 		//Wait(Exponential(15));
 		 	}
 		 	else
 		 	{
-		 		Wait(Exponential(5)); // muze okamzite odebrat jidlo
+		 		obsluha = Exponential(5);
+		 		Wait(obsluha);
+		 		dobaObsluhyPult2(obsluha);
+		 		//Wait(Exponential(5)); // muze okamzite odebrat jidlo
 		 	}
 		 	Release(fac3);
 		 	J2++;
@@ -61,6 +90,21 @@ class Student : public Process
 		 	}
 
 		 	// Pokladna
+		 	Seize(pokladna);
+		 	if (Random() <= 0.75)
+		 	{
+		 		Wait(Exponential(7));
+		 	}
+		 	else
+		 	{
+		 		Wait(Exponential(25));
+		 	}
+		 	Release(pokladna);
+
+		 	// usazeni a jezeni obědu
+		 	Enter(pocetMist, 1);
+		 	Wait(Uniform(9 * MINUTA, 20 * MINUTA));
+		 	Leave(pocetMist, 1);
 		 
 		 }
 /////////////////
@@ -85,7 +129,7 @@ class Student : public Process
 		 		if (Random() <= 0.33)
 		 		{
 		 			// hlavni jidlo z pultu c.1 (Pult polevky+hlavni jidlo 1)
-		 			if (Random() <= 0.25)
+		 			if (Random() <= 0.85)
 		 			{
 		 				// jidlo neni pripraveno
 		 				Wait(Exponential(15));
@@ -106,7 +150,23 @@ class Student : public Process
 				 		Release(fac1);
 				 		PJ1Pi++;
 				 	}
+
 		 			// Pokladna
+				 	Seize(pokladna);
+				 	if (Random() <= 0.75)
+				 	{
+				 		Wait(Exponential(7));
+				 	}
+				 	else
+				 	{
+				 		Wait(Exponential(25));
+				 	}
+				 	Release(pokladna);
+
+				 	// usazeni a jezeni obědu
+				 	Enter(pocetMist, 1);
+				 	Wait(Uniform(9 * MINUTA, 20 * MINUTA));
+				 	Leave(pocetMist, 1);
 
 		 		} // konec moznosti Polevka + Hlavni jidlo z pultu c.1
 		 		else
@@ -114,15 +174,21 @@ class Student : public Process
 		 			// hlavni jidlo z pultu c.2 (Pult polevky+hlavni jidlo 1)
 		 			Release(fac2);
 		 			Seize(fac3);
-		 			if (Random() <= 0.25)
+		 			if (Random() <= 0.90)
 		 			{
 		 				// jidlo neni pripraveno
-		 				Wait(Exponential(15));
+		 				//Wait(Exponential(15));
+		 				obsluha = Exponential(15);
+				 		Wait(obsluha);
+				 		dobaObsluhyPult2(obsluha);
 		 			}
 		 			else
 		 			{
 		 				// jidlo je pripraveno
-		 				Wait(Exponential(5));
+		 				//Wait(Exponential(5));
+		 				obsluha = Exponential(5);
+				 		Wait(obsluha);
+				 		dobaObsluhyPult2(obsluha);
 		 			}
 		 			Release(fac3);
 		 			PJ2++;
@@ -135,7 +201,23 @@ class Student : public Process
 				 		Release(fac1);
 				 		PJ2Pi++;
 				 	}
+
 		 			// Pokladna
+				 	Seize(pokladna);
+				 	if (Random() <= 0.75)
+				 	{
+				 		Wait(Exponential(7));
+				 	}
+				 	else
+				 	{
+				 		Wait(Exponential(25));
+				 	}
+				 	Release(pokladna);
+
+				 	// usazeni a jezeni obědu
+				 	Enter(pocetMist, 1);
+				 	Wait(Uniform(9 * MINUTA, 20 * MINUTA));
+				 	Leave(pocetMist, 1);
 
 		 		} //konec moznosti Polevka + Hlavni jidlo z pultu c.2 (Pult s hlavnim jidlem 2)
 
@@ -144,7 +226,7 @@ class Student : public Process
 		 	else
 		 	{
 		 		// pouze hlavni jidlo z pultu c.1 (Pult polevky+hlavni jidlo 1) tj. NEBERE POLEVKU!!!
-		 		if (Random() <= 0.25)
+		 		if (Random() <= 0.85)
 		 		{
 		 			// jidlo neni pripraveno
 		 			Wait(Exponential(15));
@@ -165,7 +247,23 @@ class Student : public Process
 					Release(fac1);
 					J1Pi++;
 				}
+
 		 		// Pokladna
+			 	Seize(pokladna);
+			 	if (Random() <= 0.75)
+			 	{
+			 		Wait(Exponential(7));
+			 	}
+			 	else
+			 	{
+			 		Wait(Exponential(25));
+			 	}
+			 	Release(pokladna);
+
+			 	// usazeni a jezeni obědu
+			 	Enter(pocetMist, 1);
+			 	Wait(Uniform(9 * MINUTA, 20 * MINUTA));
+			 	Leave(pocetMist, 1);
 
 		 	} // konec moznosti pouze Hlavni jidlo z pultu 1 (Pult polevky+hlavni jidlo 1)
 
@@ -180,7 +278,7 @@ class Prichod : public Event
 	{
 		(new Student)->Activate();
 		/* Cas aktivace, bude se menit (cela podstata experimentů) */
-		Activate(Time+Exponential(15));
+		Activate(Time+Exponential(12));
 	}
 	
 };
@@ -196,6 +294,9 @@ int main()
 	fac1.Output();
 	fac2.Output();
 	fac3.Output();
+	pokladna.Output();
+	pocetMist.Output();
+	//dobaObsluhyPult2.Output();
 	std::cout << "Pouze piti:	" << Pi << std::endl;
 	std::cout << "Pouze jidlo 2:	" << J2 << std::endl;
 	std::cout << "Jidlo 2 + Piti:	" << J2Pi << std::endl;
@@ -205,7 +306,7 @@ int main()
 	std::cout << "Polevka + Jidlo 1 + Piti:	" << PJ1Pi << std::endl;
 	std::cout << "Polevka + Jidlo 2:	" << PJ2 << std::endl;
 	std::cout << "Polevka + Jidlo 2 + Piti:	" << PJ2Pi << std::endl;
-
+	std::cout << "Celkem Studentu:	" << celkemStudentu << std::endl;
 /*int Pi = 0;
 int J2 = 0;
 int J2Pi = 0;
