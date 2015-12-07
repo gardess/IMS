@@ -11,6 +11,9 @@ Facility pokladna("Pokladna 1");
 
 Store pocetMist("Pocet zidli", 120);
 
+Queue pult2Q("Pult 2 Fronta");
+
+
 Stat dobaObsluhyPult2("Doba obsluhy u pultu 2");
 
 int J2Pi = 0;
@@ -29,246 +32,81 @@ class Student : public Process
 {
 	void Behavior()
 	{
-		//double prichod = Time;
-		double obsluha;
-		celkemStudentu++;
-		 if (Random() <= 0.0025)
-		 {
-		 	//student bere pouze piti
-		 	Seize(fac1);
-		 	Wait(Exponential(5));
-		 	Release(fac1);
-		 	Pi++;
+		double prav = Random();
+		if (prav <= 0.33)
+		{
+			Seize(fac2);
+			double polevkaPrav = Random();
+			if (polevkaPrav <= 0.77) // beru si polevku
+			{
+				Wait(Exponential(5));
+			}
 
-		 	// Pokladna
-		 	Seize(pokladna);
-		 	if (Random() <= 0.75)
-		 	{
-		 		Wait(Exponential(7));
-		 	}
-		 	else
-		 	{
-		 		Wait(Exponential(25));
-		 	}
-		 	Release(pokladna);
+			double jidloPrav = Random();
+			if (jidloPrav <= 0.38) // beru hlavni jidlo z polevkoveho pultu (buchty apod.)
+			{
+				Wait(Uniform(5, 15));
+			}
+			else
+			{
+				Priority = 1;
+				Release(fac2);
+				goto HlavniJidlo2;
+			}
+			Release(fac2);
+			double voda1 = Random();
+			if (voda1 <= 0.50)
+			{
+				goto Piti;
+			}
+			goto Pokladna;
+		}
+		else
+		{
+HlavniJidlo2:
+			Seize(fac3);
+			Priority = 0;
+			double priprava = Random();
+			if (priprava <= 0.25) // jidlo je nachystano a muzeme si ho ihned vzit
+			{
+				Wait(Exponential(5));
+			}
+			else // rikame co chceme a cekame na pozadovane jidlo
+			{
+				Wait(Uniform(10, 15));
+			}
+			Release(fac3);
+			double voda = Random();
+			if (voda <= 0.50)
+			{
+				goto Piti;
+			}
+			goto Pokladna;
+		}
 
-		 	// usazeni a jezeni obědu
-		 	Enter(pocetMist, 1);
-		 	Wait(Uniform(9 * MINUTA, 20 * MINUTA));
-		 	Leave(pocetMist, 1);
-		 }
+Piti:
+	Seize(fac1);
+	Wait(Exponential(5));
+	Release(fac1);
 
-		else if (Random() > 0.2025)
-		 {
-		 	// student bere hlavni jidlo od pult c.2
-		 	Seize(fac3);
+Pokladna:
+		Seize(pokladna); 
+		if (Random() > 0.15) // student ma dostatek penez na konte
+		{
+			Wait(Exponential(7));
+		}
+		else
+		{
+			Wait(Uniform(10, 15));
+		}
 
-		 	if (Random() <= 0.90) // na pultu neni pripravene jidlo ktere chce
-		 	{
-		 		obsluha = Exponential(15);
-		 		Wait(obsluha);
-		 		dobaObsluhyPult2(obsluha);
-		 		//Wait(Exponential(15));
-		 	}
-		 	else
-		 	{
-		 		obsluha = Exponential(5);
-		 		Wait(obsluha);
-		 		dobaObsluhyPult2(obsluha);
-		 		//Wait(Exponential(5)); // muze okamzite odebrat jidlo
-		 	}
-		 	Release(fac3);
-		 	J2++;
-		 	if(Random() <= 0.5)
-		 	{
-		 		// Student chce i piti
-		 		Seize(fac1);
-		 		Wait(Exponential(5));
-		 		Release(fac1);
-		 		J2Pi++;
+		Release(pokladna);
 
-		 	}
+		Enter(pocetMist, 1); // zabrani zidle
 
-		 	// Pokladna
-		 	Seize(pokladna);
-		 	if (Random() <= 0.75)
-		 	{
-		 		Wait(Exponential(7));
-		 	}
-		 	else
-		 	{
-		 		Wait(Exponential(25));
-		 	}
-		 	Release(pokladna);
+		Wait(Uniform(9 * MINUTA, 20 * MINUTA)); // obedvani
 
-		 	// usazeni a jezeni obědu
-		 	Enter(pocetMist, 1);
-		 	Wait(Uniform(9 * MINUTA, 20 * MINUTA));
-		 	Leave(pocetMist, 1);
-		 
-		 }
-/////////////////
-		 else
-		 {
-		 	//student jde k polevkovemu pultu
-		 	Seize(fac2);
-		 	if (Random() <= 0.75) //student bere polevku
-		 	{
-		 		if (Random() <= 0.90)
-		 		{
-		 			// polevka je pripravena ke vziti
-		 			Wait(Exponential(5));
-		 		}
-		 		else
-		 		{
-		 			// polevka se musi nalet do misky
-		 			Wait(Exponential(10));
-		 		}
-
-		 		// volba zda student chce hlavni jidlo z pultu 1 nebo 2
-		 		if (Random() <= 0.33)
-		 		{
-		 			// hlavni jidlo z pultu c.1 (Pult polevky+hlavni jidlo 1)
-		 			if (Random() <= 0.85)
-		 			{
-		 				// jidlo neni pripraveno
-		 				Wait(Exponential(15));
-		 			}
-		 			else
-		 			{
-		 				// jidlo je pripraveno
-		 				Wait(Exponential(5));
-		 			}
-		 			Release(fac2);
-		 			PJ1++;
-		 			// rozhodovani zde student chce i piti
-		 			if(Random() <= 0.5)
-				 	{
-				 		// Student chce i piti
-				 		Seize(fac1);
-				 		Wait(Exponential(5));
-				 		Release(fac1);
-				 		PJ1Pi++;
-				 	}
-
-		 			// Pokladna
-				 	Seize(pokladna);
-				 	if (Random() <= 0.75)
-				 	{
-				 		Wait(Exponential(7));
-				 	}
-				 	else
-				 	{
-				 		Wait(Exponential(25));
-				 	}
-				 	Release(pokladna);
-
-				 	// usazeni a jezeni obědu
-				 	Enter(pocetMist, 1);
-				 	Wait(Uniform(9 * MINUTA, 20 * MINUTA));
-				 	Leave(pocetMist, 1);
-
-		 		} // konec moznosti Polevka + Hlavni jidlo z pultu c.1
-		 		else
-		 		{
-		 			// hlavni jidlo z pultu c.2 (Pult polevky+hlavni jidlo 1)
-		 			Release(fac2);
-		 			Seize(fac3);
-		 			if (Random() <= 0.90)
-		 			{
-		 				// jidlo neni pripraveno
-		 				//Wait(Exponential(15));
-		 				obsluha = Exponential(15);
-				 		Wait(obsluha);
-				 		dobaObsluhyPult2(obsluha);
-		 			}
-		 			else
-		 			{
-		 				// jidlo je pripraveno
-		 				//Wait(Exponential(5));
-		 				obsluha = Exponential(5);
-				 		Wait(obsluha);
-				 		dobaObsluhyPult2(obsluha);
-		 			}
-		 			Release(fac3);
-		 			PJ2++;
-		 			// rozhodovani zde student chce i piti
-		 			if(Random() <= 0.5)
-				 	{
-				 		// Student chce i piti
-				 		Seize(fac1);
-				 		Wait(Exponential(5));
-				 		Release(fac1);
-				 		PJ2Pi++;
-				 	}
-
-		 			// Pokladna
-				 	Seize(pokladna);
-				 	if (Random() <= 0.75)
-				 	{
-				 		Wait(Exponential(7));
-				 	}
-				 	else
-				 	{
-				 		Wait(Exponential(25));
-				 	}
-				 	Release(pokladna);
-
-				 	// usazeni a jezeni obědu
-				 	Enter(pocetMist, 1);
-				 	Wait(Uniform(9 * MINUTA, 20 * MINUTA));
-				 	Leave(pocetMist, 1);
-
-		 		} //konec moznosti Polevka + Hlavni jidlo z pultu c.2 (Pult s hlavnim jidlem 2)
-
-		 	} // konec moznosti pri ktere student bere polevku
-
-		 	else
-		 	{
-		 		// pouze hlavni jidlo z pultu c.1 (Pult polevky+hlavni jidlo 1) tj. NEBERE POLEVKU!!!
-		 		if (Random() <= 0.85)
-		 		{
-		 			// jidlo neni pripraveno
-		 			Wait(Exponential(15));
-		 		}
-		 		else
-		 		{
-		 			// jidlo je pripraveno
-		 			Wait(Exponential(5));
-		 		}
-		 		Release(fac2);
-		 		J1++;
-		 		// rozhodovani zde student chce i piti
-		 		if(Random() <= 0.5)
-				{
-					// Student chce i piti
-					Seize(fac1);
-					Wait(Exponential(5));
-					Release(fac1);
-					J1Pi++;
-				}
-
-		 		// Pokladna
-			 	Seize(pokladna);
-			 	if (Random() <= 0.75)
-			 	{
-			 		Wait(Exponential(7));
-			 	}
-			 	else
-			 	{
-			 		Wait(Exponential(25));
-			 	}
-			 	Release(pokladna);
-
-			 	// usazeni a jezeni obědu
-			 	Enter(pocetMist, 1);
-			 	Wait(Uniform(9 * MINUTA, 20 * MINUTA));
-			 	Leave(pocetMist, 1);
-
-		 	} // konec moznosti pouze Hlavni jidlo z pultu 1 (Pult polevky+hlavni jidlo 1)
-
-		 }
-		 
+		Leave(pocetMist, 1); // vraceni zidle a opusteni menzy
 	}
 }; // konec tridy student
 
@@ -286,7 +124,8 @@ class Prichod : public Event
 int main()
 {
 	//std::cout << "Hello world" << std::endl;
-	Init(0, 60*60*3.5);
+	//Init(0, 60 * MINUTA);
+	Init(0, PROVOZNIDOBA);
 	(new Prichod)->Activate();
 	RandomSeed(time(NULL));
 	Run();
