@@ -51,49 +51,28 @@ Histogram polevkaH("Pocet studentu, ktery si vzali polevku", 0, MINUTA, 210);
 Histogram prichodH("Casy prichodu studentu", 0, MINUTA, 210);
 Histogram obed2H2("Pocet studentu, ktery maji hlavni jidlo z pultu 2.2", 0, MINUTA, 210);
 
-Stat dobaObsluhyPult2("Doba obsluhy u pultu 2");
-
-#if DEBUG
-	int pocetStudentu = 0;
-	int polevka = 0;
-	int jidlo1 = 0;
-	int jidlo2 = 0;
-	int voda = 0;
-#endif
 
 class Student : public Process
 {
 
 	void Behavior()
 	{
-#if DEBUG
-	pocetStudentu++;
-#endif
-		//double start_time = Time;
 		prichodH(Time);
 		double prav = Random();
-		//cout << "TEST2: " << prav << endl;
+
 		if (prav <= 0.33) // chci polevku nebo hlavni jidlo typu buchty apod.
 		{
 			Seize(fac2);
 			double polevkaPrav = Random();
-			//cout << "TEST3: " << polevkaPrav << endl;
 			if (polevkaPrav <= 0.77) // beru si polevku
 			{
-#if DEBUG
-	polevka++;
-#endif
 				Wait(Exponential(5));
 				polevkaH(Time); // ulozeni hodnoty do histogramu
 			}
 
 			double jidloPrav = Random();
-			//cout << "TEST4: " << jidloPrav << endl;
 			if (jidloPrav <= 0.38) // beru hlavni jidlo z polevkoveho pultu (buchty apod.)
 			{
-#if DEBUG
-	jidlo1++;
-#endif
 				double priprava1 = Random();
 				if (priprava1 <= pripravaPrav) // jidlo je nachystano a muzeme si ho ihned vzit
 				{
@@ -142,12 +121,8 @@ HlavniJidlo2:
 			{
 				Seize(fac3);
 			}
-#if DEBUG
-	jidlo2++;
-#endif
 			Priority = 0;
 			double priprava2 = Random();
-			//cout << "TEST30: " <<  << endl;
 			if (priprava2 <= pripravaPrav) // jidlo je nachystano a muzeme si ho ihned vzit
 			{
 				Wait(Exponential(5));
@@ -184,9 +159,6 @@ HlavniJidlo2:
 
 Piti: // chci neco na piti
 	Seize(fac1);
-#if DEBUG
-	voda++;
-#endif
 	Wait(Exponential(5));
 	Release(fac1);
 
@@ -292,12 +264,49 @@ class Prichod : public Event
 
 		else if (paramOptimalizace == 1) // Trosku lepsi rozlozeni prichodu studentu v case
 		{
+			if (((Time > 0) && (Time < 10*MINUTA)) ||
+				((Time > 30*MINUTA) && (Time < 40*MINUTA)) ||
+				((Time > (1*HODINA)) && (Time < (1*HODINA+10*MINUTA))) ||
+				((Time > (1*HODINA+30*MINUTA)) && (Time < (1*HODINA+40*MINUTA))) ||
+				((Time > (2*HODINA)) && (Time < (2*HODINA+10*MINUTA))) ||
+				((Time > (2*HODINA+30*MINUTA)) && (Time < (2*HODINA+40*MINUTA))) ||
+				((Time > (3*HODINA)) && (Time < (3*HODINA+10*MINUTA))))
+			{
+				Activate(Time+Exponential(8));
+			}
+			// 5 minut pred zaviraci dobou uz nikdo neprijde (vypozorovano pri mereni)
+			else if (Time > (3*HODINA+25*MINUTA))
+			{
+				;
+			}
+			else
+			{
+				Activate(Time+Exponential(16));
+			}
 
 		}
 
 		else if (paramOptimalizace == 2) // Znacne lepsi rozlozeni prichodu studentu v case
 		{
-
+			if (((Time > 0) && (Time < 20*MINUTA)) ||
+				((Time > 30*MINUTA) && (Time < 50*MINUTA)) ||
+				((Time > (1*HODINA)) && (Time < (1*HODINA+20*MINUTA))) ||
+				((Time > (1*HODINA+30*MINUTA)) && (Time < (1*HODINA+50*MINUTA))) ||
+				((Time > (2*HODINA)) && (Time < (2*HODINA+20*MINUTA))) ||
+				((Time > (2*HODINA+30*MINUTA)) && (Time < (2*HODINA+50*MINUTA))) ||
+				((Time > (3*HODINA)) && (Time < (3*HODINA+20*MINUTA))))
+			{
+				Activate(Time+Exponential(10));
+			}
+			// 5 minut pred zaviraci dobou uz nikdo neprijde (vypozorovano pri mereni)
+			else if (Time > (3*HODINA+25*MINUTA))
+			{
+				;
+			}
+			else
+			{
+				Activate(Time+Exponential(22));
+			}
 		}
 
 		else if (paramOptimalizace == 3) // Idealni rozlozeni studentu v case
@@ -322,7 +331,7 @@ class Prichod : public Event
 	
 };
 
-int main(int argc, char **argv) // /.proj (pocet pokladen) (pocet pultu pro vydej hlavnich jidel) (procento ve kterem budou mit kucharky pripravene jidlo) (cislo optimalizace prichodu (bude jich vice(2-3))) (vystupni soubor)
+int main(int argc, char **argv)
 {
 	// primitivni zpracovani argumentu pro "make run"
 	if (argc >= 2)
@@ -387,6 +396,7 @@ int main(int argc, char **argv) // /.proj (pocet pokladen) (pocet pultu pro vyde
 	SetOutput(filename.c_str());
 	Run();
 
+// vypisy jednotlivych casti modelu
 	fac1.Output();
 	fac2.Output();
 	fac3.Output();
@@ -401,13 +411,7 @@ int main(int argc, char **argv) // /.proj (pocet pokladen) (pocet pultu pro vyde
 	}
 	pocetMist.Output();
 
-#if DEBUG
-	cout << "Pocet studentu: " << pocetStudentu << endl;
-	cout << "Pocet studentu s polevkou: " << polevka << endl;
-	cout << "Pocet studentu s hlavnim jidlem 1: " << jidlo1 << endl;
-	cout << "Pocet studentu s hlavnim jidlem 2: " << jidlo2 << endl;
-	cout << "Pocet studentu s pitim: " << voda << endl;
-#endif
+// vypis histogramu
 	pokladna1H.Output();
 	obed1H.Output();
 	obed2H1.Output();
