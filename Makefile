@@ -1,5 +1,6 @@
 #Makefile pro IMS projekt
-#Autor: Milan Gardáš <xgarda04@stud.fit.vutbr.cz>
+#Autori: Milan Gardáš <xgarda04@stud.fit.vutbr.cz>
+#		 Denis Gerguri <xgergu01@stud.fit.vutbr.cz>
 
 # /.proj (pocet pokladen(1-2)) (pocet pultu pro vydej hlavnich jidel(1-2)) (procento ve kterem budou mit kucharky pripravene jidlo(0.00-0.99)) (cislo optimalizace prichodu (0-3)) (vystupni soubor)
 
@@ -14,12 +15,13 @@ build: $(PROJ).cpp
 	$(CXX) $(CXXFLAGS) $(PROJ).cpp -o $(PROJ) $(LDFLAGS)
 
 run:
-	./$(PROJ) 1 1 0.25 0 experiment1 # 1 pokladna, 1 pult pro hlavni jidla
-	./$(PROJ) 2 1 0.25 0 experiment2 # 2 pokladny
-	./$(PROJ) 1 2 0.25 0 experiment3 # 2 pulty
-	./$(PROJ) 2 2 0.25 0 experiment4 # 2 pokladny, 2 pulty
-	./$(PROJ) 1 1 0.75 0 experiment5 # zvysena pravdepodobnost pripraveneho jidla na pultu
-	./$(PROJ) 1 1 0.25 3 experiment6 # idealni prichod studentu (1 a 2 v parametru zatim nejsou naprogramovane)
+	./$(PROJ) 1 1 0.25 0 experiment_1 # 1 pokladna, 1 pult pro hlavni jidla => standartní menza, ověření shody namerenych hodnot s hodnotami ze simulace
+	./$(PROJ) 2 1 0.25 0 experiment_2 # 2 pokladny
+	./$(PROJ) 1 2 0.25 0 experiment_3 # 2 pulty
+	./$(PROJ) 2 2 0.25 0 experiment_4 # 2 pokladny, 2 pulty
+	./$(PROJ) 1 1 0.75 0 experiment_5 # zvysena pravdepodobnost pripraveneho jidla na pultu
+	./$(PROJ) 1 1 0.25 3 experiment_6 # idealni prichod studentu (1 a 2 v parametru zatim nejsou naprogramovane)
+	./$(PROJ) 1 1 0.25 4 experiment_7 # otevření menzy - v malém časovém okamžiku příjde 150 lidí
 
 clean:
 	rm -f $(PROJ) 07_xgarda04_xgergu01.zip 
