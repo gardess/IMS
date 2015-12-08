@@ -1,9 +1,8 @@
-/******************************************************************************
-Projekt IMS - Model studentské menzy
-Autori: Gardas Milan (xgarda04@stud.fit.vutbr.cz) - zastupce tymu
-		Gerguri Denis (xgergu01@stud.fit.vutbr.cz)
-Zakladni casova jednotka je 1 sekunda
-******************************************************************************/
+/* Projekt IMS - Model studentské menzy
+ * Autori:	Gardas Milan (xgarda04@stud.fit.vutbr.cz) - zastupce tymu
+ * 			Gerguri Denis (xgergu01@stud.fit.vutbr.cz)
+ * Zakladni casova jednotka je 1 sekunda
+*/
 
 #include <iostream>
 #include <string>
@@ -22,8 +21,10 @@ using std::endl;
 std::string filename = "Menza.out";
 long paramPokladny = 1;
 long paramPultHlavniJidlo = 1;
-double pripravaPrav = 0.25; // DONE
-long paramOptimalizace = 0; // skoro DONE
+double pripravaPrav = 0.25;
+long paramOptimalizace = 0; 
+
+int pocetS = 1;
 
 // pulty s jidlem nebo pitim
 Facility fac1("Pult s pitim");
@@ -57,24 +58,6 @@ Stat dobaObsluhyPult2("Doba obsluhy u pultu 2");
 	int jidlo2 = 0;
 	int voda = 0;
 #endif
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 class Student : public Process
 {
@@ -142,7 +125,7 @@ HlavniJidlo2:
 			int pult = 0;
 			if (paramPultHlavniJidlo == 2)
 			{
-				if (fac3.QueueLen() < fac4.QueueLen())
+				if (fac3.QueueLen() <= fac4.QueueLen())
 				{
 					Seize(fac3);
 					pult = 1;
@@ -208,8 +191,15 @@ Piti: // chci neco na piti
 Pokladna: // platba, zabrani zidle a samotne jezeni
 		int pok = 0; 
 		if (paramPokladny == 2)
+		{
+			if (pokladna1.QueueLen() < pokladna2.QueueLen()) // vyber pokladny podle delky fronty
 			{
-				if (pokladna1.QueueLen() < pokladna2.QueueLen())
+				Seize(pokladna1);
+				pok = 1;
+			}
+			else if (pokladna1.QueueLen() == pokladna2.QueueLen())
+			{
+				if (Random() <= 0.5)
 				{
 					Seize(pokladna1);
 					pok = 1;
@@ -222,8 +212,14 @@ Pokladna: // platba, zabrani zidle a samotne jezeni
 			}
 			else
 			{
-				Seize(pokladna1);
+				Seize(pokladna2);
+				pok = 2;
 			}
+		}
+		else
+		{
+			Seize(pokladna1);
+		}
 		
 		if (Random() > 0.15) // student ma dostatek penez na konte
 		{
@@ -310,6 +306,16 @@ class Prichod : public Event
 				;
 			}
 		}
+
+		else if (paramOptimalizace == 4) // vygenerovani 150 lidi v jeden casovy okamzik (simalace otevreni menzy kdy prijde nejvice lidi) 
+		{
+
+			if (pocetS < 100)
+			{
+				Activate(Time+Exponential(1));
+				pocetS++;
+			}
+		}
 	}
 	
 };
@@ -360,6 +366,10 @@ int main(int argc, char **argv) // /.proj (pocet pokladen) (pocet pultu pro vyde
 		{
 			paramOptimalizace = 3;
 		}
+		else if (argv[4][0] == '4')
+		{
+			paramOptimalizace = 4;
+		}
 	}
 	if (argc >= 6)		// jmeno souboru do ktereho bude tisknut vystup simulace(defaultne "Menza.out")
 	{
@@ -378,7 +388,15 @@ int main(int argc, char **argv) // /.proj (pocet pokladen) (pocet pultu pro vyde
 	fac1.Output();
 	fac2.Output();
 	fac3.Output();
+	if (paramPultHlavniJidlo == 2)
+	{
+		fac4.Output();
+	}
 	pokladna1.Output();
+	if(paramPokladny == 2)
+	{
+		pokladna2.Output();
+	}
 	pocetMist.Output();
 
 #if DEBUG
