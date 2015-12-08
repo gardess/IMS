@@ -2,7 +2,7 @@
  * Autori:	Gardas Milan (xgarda04@stud.fit.vutbr.cz) - zastupce tymu
  * 			Gerguri Denis (xgergu01@stud.fit.vutbr.cz)
  * Zakladni casova jednotka je 1 sekunda
-*/
+ */
 
 #include <iostream>
 #include <string>
@@ -25,6 +25,8 @@ double pripravaPrav = 0.25;
 long paramOptimalizace = 0; 
 
 int pocetS = 1;
+
+Queue pultFronta("Spolecna fronta");
 
 // pulty s jidlem nebo pitim
 Facility fac1("Pult s pitim");
