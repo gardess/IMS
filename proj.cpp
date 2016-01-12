@@ -34,7 +34,6 @@ Facility fac2("Pult polevky+hlavni jidlo 1");
 Facility fac3("Pult s hlavnim jidlem 2");
 Facility fac4("Pult s hlavnim jidlem 2 pridany parametrem");
 
-
 // pokladny
 Facility pokladna1("Pokladna 1");
 Facility pokladna2("Pokladna 2 (pridana parametrem)");
@@ -42,7 +41,7 @@ Facility pokladna2("Pokladna 2 (pridana parametrem)");
 // mista u stolu v menze
 Store pocetMist("Pocet zidli", 120);
 
-
+// histogramy
 Histogram pokladna1H("Pocet studentu, ktery opustili pokladnu 1", 0, MINUTA, 210);
 Histogram pokladna2H("Pocet studentu, ktery opustili pokladnu 2", 0, MINUTA, 210);
 Histogram obed1H("Pocet studentu, ktery maji hlavni jidlo z pultu 1", 0, MINUTA, 210);
@@ -166,23 +165,10 @@ Pokladna: // platba, zabrani zidle a samotne jezeni
 		int pok = 0; 
 		if (paramPokladny == 2)
 		{
-			if (pokladna1.QueueLen() < pokladna2.QueueLen()) // vyber pokladny podle delky fronty
+			if (pokladna1.QueueLen() <= pokladna2.QueueLen()) // vyber pokladny podle delky fronty
 			{
 				Seize(pokladna1);
 				pok = 1;
-			}
-			else if (pokladna1.QueueLen() == pokladna2.QueueLen())
-			{
-				if (Random() <= 0.5)
-				{
-					Seize(pokladna1);
-					pok = 1;
-				}
-				else
-				{
-					Seize(pokladna2);
-					pok = 2;
-				}
 			}
 			else
 			{
@@ -236,17 +222,17 @@ class Prichod : public Event
 	void Behavior()
 	{
 		(new Student)->Activate();
-		//cout << "TEST" << endl;
-		if (paramOptimalizace == 0) // Standartni rozlozeni prichodu studentu
+
+		if (paramOptimalizace == 0) // Standardni rozlozeni prichodu zakazniku
 		{
-			// V kazdou celou hodinu prijde vice studentu
+			// V kazdou celou hodinu prijde vice zakazniku
 			if (((Time > (1*HODINA)) && (Time < (1*HODINA+10*MINUTA))) ||
 				((Time > (2*HODINA)) && (Time < (2*HODINA+5*MINUTA))) ||
 				((Time > 3*HODINA) && (Time < (3*HODINA+5*MINUTA))))
 			{
 				Activate(Time+Exponential(5));
 			}
-			// Nejvice lidi prijde na zacatku (pravdepodobne chteji vybirat z hodne jidel)
+			// Nejvice zakazniku prijde na zacatku
 			else if ((Time > 0) && (Time < 15*MINUTA))
 			{
 				Activate(Time+Exponential(5));
@@ -262,7 +248,7 @@ class Prichod : public Event
 			}
 		}
 
-		else if (paramOptimalizace == 1) // Trosku lepsi rozlozeni prichodu studentu v case
+		else if (paramOptimalizace == 1) // Trosku lepsi rozlozeni prichodu zakazniku v case
 		{
 			if (((Time > 0) && (Time < 10*MINUTA)) ||
 				((Time > 30*MINUTA) && (Time < 40*MINUTA)) ||
@@ -272,7 +258,7 @@ class Prichod : public Event
 				((Time > (2*HODINA+30*MINUTA)) && (Time < (2*HODINA+40*MINUTA))) ||
 				((Time > (3*HODINA)) && (Time < (3*HODINA+10*MINUTA))))
 			{
-				Activate(Time+Exponential(8));
+				Activate(Time+Exponential(7));
 			}
 			// 5 minut pred zaviraci dobou uz nikdo neprijde (vypozorovano pri mereni)
 			else if (Time > (3*HODINA+25*MINUTA))
@@ -281,12 +267,12 @@ class Prichod : public Event
 			}
 			else
 			{
-				Activate(Time+Exponential(16));
+				Activate(Time+Exponential(19));
 			}
 
 		}
 
-		else if (paramOptimalizace == 2) // Znacne lepsi rozlozeni prichodu studentu v case
+		else if (paramOptimalizace == 2) // Jeste lepsi rozlozeni prichodu zakazniku v case
 		{
 			if (((Time > 0) && (Time < 20*MINUTA)) ||
 				((Time > 30*MINUTA) && (Time < 50*MINUTA)) ||
@@ -309,19 +295,19 @@ class Prichod : public Event
 			}
 		}
 
-		else if (paramOptimalizace == 3) // Idealni rozlozeni studentu v case
+		else if (paramOptimalizace == 3) // Idealni rozlozeni zakazniku v case
 		{
-			Activate(Time+Exponential(12));
+			Activate(Time+Uniform(11,12));
 			if (Time > (3*HODINA+25*MINUTA))
 			{
 				;
 			}
 		}
 
-		else if (paramOptimalizace == 4) // vygenerovani 150 lidi v jeden casovy okamzik (simalace otevreni menzy kdy prijde nejvice lidi) 
+		else if (paramOptimalizace == 4) // vygenerovani 150 zakazniku v kratkem casovem okamziku (simulace otevreni menzy kdy prijde nejvice zakazniku) 
 		{
 
-			if (pocetS < 100)
+			if (pocetS < 150)
 			{
 				Activate(Time+Exponential(1));
 				pocetS++;
@@ -363,7 +349,7 @@ int main(int argc, char **argv)
 			}
 	}
 
-	if (argc >=5)	// optimalizace prichodu studentu do menzy (0-3)
+	if (argc >=5)	// optimalizace prichodu studentu do menzy (0-3), 4 je specialni pripad
 	{
 		if (argv[4][0] == '1')
 		{
@@ -389,8 +375,14 @@ int main(int argc, char **argv)
 	}
 	// konec zpracovani argumentu
 
-
-	Init(0, PROVOZNIDOBA);
+	if (paramOptimalizace == 4)
+	{
+		Init(0, 45*MINUTA);
+	}
+	else
+	{
+		Init(0, PROVOZNIDOBA);
+	}
 	(new Prichod)->Activate();
 	RandomSeed(time(NULL));
 	SetOutput(filename.c_str());
